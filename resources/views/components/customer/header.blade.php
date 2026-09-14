@@ -16,12 +16,15 @@
                    class="text-sm font-medium {{ request()->routeIs('categories.*') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600' }}">
                     Kategori
                 </a>
+                @php $cartCount = session('cart') ? collect(session('cart'))->sum('quantity') : 0; @endphp
                 <a href="{{ route('cart.index') }}"
                    class="relative text-sm font-medium {{ request()->routeIs('cart.*') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600' }}">
                     Keranjang
-                    <span class="absolute -top-2 -right-4 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        0
-                    </span>
+                    @if($cartCount > 0)
+                        <span class="absolute -top-2 -right-4 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {{ $cartCount }}
+                        </span>
+                    @endif
                 </a>
             </nav>
 
@@ -44,9 +47,10 @@
                    class="text-sm font-medium {{ request()->routeIs('categories.*') ? 'text-blue-600' : 'text-gray-700' }}">
                     Kategori
                 </a>
+                @php $cartCountMobile = session('cart') ? collect(session('cart'))->sum('quantity') : 0; @endphp
                 <a href="{{ route('cart.index') }}"
                    class="text-sm font-medium {{ request()->routeIs('cart.*') ? 'text-blue-600' : 'text-gray-700' }}">
-                    Keranjang (0)
+                    Keranjang @if($cartCountMobile > 0)({{ $cartCountMobile }})@endif
                 </a>
             </div>
         </div>

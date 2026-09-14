@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VariantController;
+use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CategoryController as CustomerCategoryController;
 use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
@@ -14,7 +15,13 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/kategori', [CustomerCategoryController::class, 'index'])->name('categories.index');
 Route::get('/kategori/{slug}', [CustomerCategoryController::class, 'show'])->name('categories.show');
 Route::get('/produk/{slug}', [CustomerProductController::class, 'show'])->name('products.show');
-Route::get('/keranjang', fn () => view('customer.cart.index'))->name('cart.index');
+
+// Cart Routes
+Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
+Route::post('/keranjang/tambah', [CartController::class, 'store'])->name('cart.store');
+Route::patch('/keranjang/{key}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/keranjang/{key}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::delete('/keranjang', [CartController::class, 'clear'])->name('cart.clear');
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
