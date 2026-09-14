@@ -39,7 +39,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('items', 'statusHistories');
+        $order->load('items', 'statusHistories', 'latestPaymentProof', 'latestPaymentProof.verifier');
 
         return view('admin.orders.show', compact('order'));
     }

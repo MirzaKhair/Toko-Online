@@ -169,6 +169,104 @@
                 </div>
             </div>
 
+            {{-- Bukti Pembayaran --}}
+            @if($order->payment_method === 'qris')
+                @php
+                    $latestProof = $order->latestPaymentProof;
+                @endphp
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Bukti Pembayaran</h2>
+
+                    @if($latestProof)
+                        @if($latestProof->file_path)
+                            <div class="mb-4">
+                                <a href="{{ asset('storage/' . $latestProof->file_path) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $latestProof->file_path) }}"
+                                         alt="Bukti pembayaran"
+                                         class="rounded-lg border border-gray-200 max-w-full">
+                                </a>
+                            </div>
+                        @endif
+
+                        <div class="space-y-2 text-sm mb-4">
+                            <div>
+                                <p class="text-gray-500">Status Bukti</p>
+                                @php
+                                    $proofStatusColors = [
+                                        'pending' => 'bg-yellow-100 text-yellow-800',
+                                        'approved' => 'bg-green-100 text-green-800',
+                                        'rejected' => 'bg-red-100 text-red-800',
+                                    ];
+                                    $proofStatusColor = $proofStatusColors[$latestProof->status] ?? 'bg-gray-100 text-gray-800';
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $proofStatusColor }}">
+                                    {{ ucfirst($latestProof->status) }}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Waktu Upload</p>
+                                <p class="text-gray-900">{{ $latestProof->created_at->format('d M Y, H:i') }}</p>
+                            </div>
+                            @if($latestProof->verified_at)
+                                <div>
+                                    <p class="text-gray-500">Diverifikasi</p>
+                                    <p class="text-gray-900">{{ $latestProof->verified_at->format('d M Y, H:i') }}</p>
+                                </div>
+                            @endif
+                            @if($latestProof->verifier)
+                                <div>
+                                    <p class="text-gray-500">Oleh</p>
+                                    <p class="text-gray-900">{{ $latestProof->verifier->name }}</p>
+                                </div>
+                            @endif
+                            @if($latestProof->admin_note)
+                                <div>
+                                    <p class="text-gray-500">Catatan Admin</p>
+                                    <p class="text-gray-900">{{ $latestProof->admin_note }}</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if($order->payment_status === 'waiting_verification' && $latestProof->status === 'pending')
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="text-sm font-semibold text-gray-800 mb-3">Verifikasi Pembayaran</h3>
+                                <form action="{{ route('admin.orders.verifyPayment', $order->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="mb-3">
+                                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Keputusan</label>
+                                        <select name="status" id="status" required
+                                                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Pilih keputusan</option>
+                                            <option value="approved">Approve</option>
+                                            <option value="rejected">Reject</option>
+                                        </select>
+                                        @error('status')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="admin_note" class="block text-sm font-medium text-gray-700 mb-1">Catatan Admin</label>
+                                        <textarea name="admin_note" id="admin_note" rows="2"
+                                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                  placeholder="Catatan (opsional)">{{ old('admin_note') }}</textarea>
+                                        @error('admin_note')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <button type="submit" onclick="return confirm('Yakin ingin memverifikasi bukti pembayaran ini?')"
+                                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+                                        Verifikasi Pembayaran
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    @else
+                        <p class="text-sm text-gray-500">Belum ada bukti pembayaran diunggah.</p>
+                    @endif
+                </div>
+            @endif
+
             {{-- Ubah Ongkir --}}
             @php
                 $finalStatuses = ['completed', 'cancelled'];

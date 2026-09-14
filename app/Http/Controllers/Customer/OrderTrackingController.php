@@ -41,7 +41,7 @@ class OrderTrackingController extends Controller
                 ->with('error', 'Anda belum melakukan pencarian untuk pesanan ini. Silakan cari pesanan terlebih dahulu.');
         }
 
-        $order = Order::with('items', 'statusHistories')
+        $order = Order::with('items', 'statusHistories', 'latestPaymentProof')
             ->where('order_number', $order_number)
             ->first();
 

@@ -42,8 +42,13 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class);
     }
 
-    public function paymentProof(): HasOne
+    public function paymentProofs(): HasMany
     {
-        return $this->hasOne(PaymentProof::class);
+        return $this->hasMany(PaymentProof::class);
+    }
+
+    public function latestPaymentProof(): HasOne
+    {
+        return $this->hasOne(PaymentProof::class)->latestOfMany();
     }
 }

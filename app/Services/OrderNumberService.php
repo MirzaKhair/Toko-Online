@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrderNumberService
 {
@@ -12,14 +12,10 @@ class OrderNumberService
         $today = now()->format('Ymd');
         $prefix = 'ORD-' . $today . '-';
 
-        return DB::transaction(function () use ($prefix, $today) {
-            $count = Order::where('order_number', 'like', $prefix . '%')
-                ->lockForUpdate()
-                ->count();
+        do {
+            $orderNumber = $prefix . strtoupper(Str::random(6));
+        } while (Order::where('order_number', $orderNumber)->exists());
 
-            $sequence = $count + 1;
-
-            return $prefix . str_pad($sequence, 3, '0', STR_PAD_LEFT);
-        });
+        return $orderNumber;
     }
 }

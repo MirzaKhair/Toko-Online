@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentProofController as AdminPaymentProofController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StoreSettingController;
 use App\Http\Controllers\Admin\VariantController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\CategoryController as CustomerCategoryController;
 use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\OrderTrackingController;
+use App\Http\Controllers\Customer\PaymentProofController as CustomerPaymentProofController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +38,9 @@ Route::get('/pesanan/{order_number}/berhasil', [CheckoutController::class, 'succ
 Route::get('/lacak-pesanan', [OrderTrackingController::class, 'form'])->name('tracking.form');
 Route::post('/lacak-pesanan', [OrderTrackingController::class, 'search'])->name('tracking.search');
 Route::get('/lacak-pesanan/{order_number}', [OrderTrackingController::class, 'detail'])->name('tracking.detail');
+
+// Payment Proof Routes (Customer)
+Route::post('/pesanan/{order}/bukti-bayar', [CustomerPaymentProofController::class, 'store'])->name('payment-proof.store');
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -77,6 +82,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/pesanan/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::patch('/pesanan/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('/pesanan/{order}/ongkir', [OrderController::class, 'updateShippingCost'])->name('orders.updateShippingCost');
+
+        // Payment Verification (Admin)
+        Route::patch('/pesanan/{order}/verifikasi-bukti', [AdminPaymentProofController::class, 'verify'])->name('orders.verifyPayment');
 
         // Store Settings
         Route::get('/pengaturan', [StoreSettingController::class, 'index'])->name('settings.index');

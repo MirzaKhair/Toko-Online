@@ -158,12 +158,19 @@ class CheckoutController extends Controller
             return $order;
         });
 
+        session(["order_access.{$order->order_number}" => true]);
+
         return redirect()->route('orders.success', $order->order_number)
             ->with('success', 'Pesanan berhasil dibuat!');
     }
 
     public function success(string $order_number)
     {
+        if (!session("order_access.{$order_number}")) {
+            return redirect()->route('tracking.form')
+                ->with('error', 'Silakan lacak pesanan Anda menggunakan nomor pesanan dan nomor telepon.');
+        }
+
         $order = Order::where('order_number', $order_number)
             ->with('items')
             ->first();

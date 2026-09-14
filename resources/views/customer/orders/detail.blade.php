@@ -123,6 +123,96 @@
             </div>
         </div>
 
+        {{-- Bukti Pembayaran --}}
+        @if($order->payment_method === 'qris')
+            @php
+                $latestProof = $order->latestPaymentProof;
+            @endphp
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Bukti Pembayaran</h2>
+
+                @if($order->payment_status === 'paid')
+                    <div class="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-green-800">Pembayaran telah dikonfirmasi.</p>
+                            @if($latestProof && $latestProof->verified_at)
+                                <p class="text-sm text-green-600">Diverifikasi pada {{ $latestProof->verified_at->format('d M Y, H:i') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                @elseif($order->payment_status === 'waiting_verification' && $latestProof && $latestProof->status === 'pending')
+                    <div class="flex items-center space-x-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="font-medium text-yellow-800">Bukti pembayaran sedang diverifikasi oleh admin.</p>
+                            <p class="text-sm text-yellow-600">Silakan tunggu konfirmasi dari admin.</p>
+                        </div>
+                    </div>
+                    @if($latestProof->file_path)
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600 mb-2">Bukti yang diunggah:</p>
+                            <img src="{{ asset('storage/' . $latestProof->file_path) }}"
+                                 alt="Bukti pembayaran"
+                                 class="rounded-lg border border-gray-200 max-w-[300px]">
+                        </div>
+                    @endif
+                @elseif($order->payment_status === 'rejected' && $latestProof && $latestProof->status === 'rejected')
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-red-800">Bukti pembayaran ditolak.</p>
+                                @if($latestProof->admin_note)
+                                    <p class="text-sm text-red-600 mt-1">Catatan: {{ $latestProof->admin_note }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Silakan unggah bukti pembayaran baru:</p>
+                    <form action="{{ route('payment-proof.store', $order->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="file" name="proof" accept=".jpg,.jpeg,.png,.webp" required
+                                   class="flex-1 text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                                Unggah Bukti Baru
+                            </button>
+                        </div>
+                        @error('proof')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </form>
+                @else
+                    @if($latestProof)
+                        <div class="mb-3">
+                            <p class="text-sm text-gray-600">Bukti terakhir: <span class="font-medium">{{ ucfirst($latestProof->status) }}</span></p>
+                        </div>
+                    @endif
+                    <p class="text-sm text-gray-600 mb-3">Unggah bukti pembayaran QRIS Anda:</p>
+                    <form action="{{ route('payment-proof.store', $order->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="file" name="proof" accept=".jpg,.jpeg,.png,.webp" required
+                                   class="flex-1 text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                                Unggah Bukti
+                            </button>
+                        </div>
+                        @error('proof')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </form>
+                @endif
+            </div>
+        @endif
+
         {{-- Riwayat Status --}}
         @if($order->statusHistories->count() > 0)
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
