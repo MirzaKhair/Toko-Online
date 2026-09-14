@@ -84,6 +84,10 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm space-x-2">
+                                    <a href="{{ route('admin.variants.index', $product->id) }}"
+                                       class="text-purple-600 hover:text-purple-800">
+                                        Varian
+                                    </a>
                                     <a href="{{ route('admin.products.edit', $product->id) }}"
                                        class="text-blue-600 hover:text-blue-800">
                                         Edit

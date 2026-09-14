@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\VariantController;
 use App\Http\Controllers\Customer\CategoryController as CustomerCategoryController;
 use App\Http\Controllers\Customer\HomeController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
@@ -39,5 +40,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/produk/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
         Route::put('/produk/{id}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/produk/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+        // Variant Management
+        Route::get('/produk/{id}/varian', [VariantController::class, 'index'])->name('variants.index');
+        Route::post('/produk/{id}/varian/opsi', [VariantController::class, 'storeOption'])->name('variants.storeOption');
+        Route::delete('/produk/{id}/varian/opsi/{optionId}', [VariantController::class, 'destroyOption'])->name('variants.destroyOption');
+        Route::post('/produk/{id}/varian/opsi/{optionId}/nilai', [VariantController::class, 'storeValue'])->name('variants.storeValue');
+        Route::delete('/produk/{id}/varian/nilai/{valueId}', [VariantController::class, 'destroyValue'])->name('variants.destroyValue');
+        Route::post('/produk/{id}/varian', [VariantController::class, 'store'])->name('variants.store');
+        Route::put('/produk/{id}/varian/{variantId}', [VariantController::class, 'update'])->name('variants.update');
+        Route::delete('/produk/{id}/varian/{variantId}', [VariantController::class, 'destroy'])->name('variants.destroy');
     });
 });
