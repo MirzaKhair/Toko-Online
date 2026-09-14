@@ -26,6 +26,10 @@
                         </span>
                     @endif
                 </a>
+                <a href="{{ route('tracking.form') }}"
+                   class="text-sm font-medium {{ request()->routeIs('tracking.*') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600' }}">
+                    Lacak Pesanan
+                </a>
             </nav>
 
             {{-- Tombol Menu Mobile --}}
@@ -51,6 +55,10 @@
                 <a href="{{ route('cart.index') }}"
                    class="text-sm font-medium {{ request()->routeIs('cart.*') ? 'text-blue-600' : 'text-gray-700' }}">
                     Keranjang @if($cartCountMobile > 0)({{ $cartCountMobile }})@endif
+                </a>
+                <a href="{{ route('tracking.form') }}"
+                   class="text-sm font-medium {{ request()->routeIs('tracking.*') ? 'text-blue-600' : 'text-gray-700' }}">
+                    Lacak Pesanan
                 </a>
             </div>
         </div>

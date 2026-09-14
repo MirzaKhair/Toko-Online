@@ -2,11 +2,15 @@
 
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StoreSettingController;
 use App\Http\Controllers\Admin\VariantController;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\CategoryController as CustomerCategoryController;
 use App\Http\Controllers\Customer\HomeController;
+use App\Http\Controllers\Customer\OrderTrackingController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +26,16 @@ Route::post('/keranjang/tambah', [CartController::class, 'store'])->name('cart.s
 Route::patch('/keranjang/{key}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/keranjang/{key}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::delete('/keranjang', [CartController::class, 'clear'])->name('cart.clear');
+
+// Checkout Routes
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/pesanan/{order_number}/berhasil', [CheckoutController::class, 'success'])->name('orders.success');
+
+// Tracking Routes
+Route::get('/lacak-pesanan', [OrderTrackingController::class, 'form'])->name('tracking.form');
+Route::post('/lacak-pesanan', [OrderTrackingController::class, 'search'])->name('tracking.search');
+Route::get('/lacak-pesanan/{order_number}', [OrderTrackingController::class, 'detail'])->name('tracking.detail');
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -57,5 +71,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/produk/{id}/varian', [VariantController::class, 'store'])->name('variants.store');
         Route::put('/produk/{id}/varian/{variantId}', [VariantController::class, 'update'])->name('variants.update');
         Route::delete('/produk/{id}/varian/{variantId}', [VariantController::class, 'destroy'])->name('variants.destroy');
+
+        // Order Management
+        Route::get('/pesanan', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/pesanan/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/pesanan/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::patch('/pesanan/{order}/ongkir', [OrderController::class, 'updateShippingCost'])->name('orders.updateShippingCost');
+
+        // Store Settings
+        Route::get('/pengaturan', [StoreSettingController::class, 'index'])->name('settings.index');
+        Route::patch('/pengaturan', [StoreSettingController::class, 'update'])->name('settings.update');
     });
 });

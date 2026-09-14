@@ -187,11 +187,10 @@
                                 </div>
                             </div>
                         </div>
-                        <button type="button" disabled
-                                class="w-full mt-6 bg-gray-400 text-white font-semibold py-3 rounded-lg cursor-not-allowed">
+                        <a href="{{ route('checkout.index') }}"
+                           class="block w-full mt-6 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition text-center">
                             Lanjut Checkout
-                        </button>
-                        <p class="text-xs text-gray-400 text-center mt-2">Fitur checkout akan segera tersedia</p>
+                        </a>
                     </div>
                 </div>
             </div>
