@@ -4,19 +4,20 @@
 
 @section('content')
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Kelola Pesanan</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Kelola Pesanan</h1>
+        <p class="mt-1 text-sm text-gray-500">Total {{ $orders->total() }} pesanan</p>
     </div>
 
     {{-- Filter --}}
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <form action="{{ route('admin.orders.index') }}" method="GET" class="flex flex-wrap gap-4">
+    <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+        <form action="{{ route('admin.orders.index') }}" method="GET" class="flex flex-wrap gap-3">
             <div class="flex-1 min-w-[200px]">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Cari nomor pesanan atau nama..."
-                       class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                       class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
             </div>
             <div class="min-w-[150px]">
-                <select name="status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select name="status" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     <option value="">Semua Status</option>
                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
@@ -27,19 +28,19 @@
                 </select>
             </div>
             <div class="min-w-[150px]">
-                <select name="payment_status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select name="payment_status" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     <option value="">Semua Pembayaran</option>
-                    <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                    <option value="waiting_verification" {{ request('payment_status') === 'waiting_verification' ? 'selected' : '' }}>Waiting Verification</option>
-                    <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="rejected" {{ request('payment_status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                    <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>Belum Dibayar</option>
+                    <option value="waiting_verification" {{ request('payment_status') === 'waiting_verification' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                    <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Sudah Dibayar</option>
+                    <option value="rejected" {{ request('payment_status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
                 </select>
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+            <button type="submit" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
                 Filter
             </button>
             @if(request()->hasAny(['search', 'status', 'payment_status']))
-                <a href="{{ route('admin.orders.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition">
+                <a href="{{ route('admin.orders.index') }}" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">
                     Reset
                 </a>
             @endif
@@ -47,31 +48,38 @@
     </div>
 
     {{-- Tabel --}}
-    @if($orders->count() > 0)
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        @if($orders->isEmpty())
+            @component('components.empty-state', ['title' => 'Belum ada pesanan', 'description' => 'Pesanan dari customer akan muncul di sini.', 'icon' => 'order'])
+            @endcomponent
+        @else
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Nomor Pesanan</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Customer</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-600">Tanggal</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-600">Total</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-600">Pembayaran</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-600">Status Bayar</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-600">Status Pesanan</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-600">Aksi</th>
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-100">
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Nomor Pesanan</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pelanggan</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Pembayaran</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status Bayar</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status Pesanan</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-50">
                         @foreach($orders as $order)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $order->order_number }}</td>
-                                <td class="px-4 py-3 text-gray-700">{{ $order->customer_name }}</td>
-                                <td class="px-4 py-3 text-gray-700">{{ $order->created_at->format('d M Y') }}</td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-900">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3 text-center text-gray-700">{{ strtoupper($order->payment_method) }}</td>
-                                <td class="px-4 py-3 text-center">
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3.5">
+                                    <a href="{{ route('admin.orders.show', $order->id) }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                        {{ $order->order_number }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3.5 text-sm text-gray-700">{{ $order->customer_name }}</td>
+                                <td class="px-4 py-3.5 text-sm text-gray-500">{{ $order->created_at->format('d M Y') }}</td>
+                                <td class="px-4 py-3.5 text-right text-sm font-medium text-gray-900">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3.5 text-center text-sm text-gray-700">{{ strtoupper($order->payment_method) }}</td>
+                                <td class="px-4 py-3.5 text-center">
                                     @php
                                         $paymentColors = [
                                             'unpaid' => 'bg-red-100 text-red-800',
@@ -80,12 +88,19 @@
                                             'rejected' => 'bg-red-100 text-red-800',
                                         ];
                                         $paymentColor = $paymentColors[$order->payment_status] ?? 'bg-gray-100 text-gray-800';
+                                        $paymentLabels = [
+                                            'unpaid' => 'Belum Dibayar',
+                                            'waiting_verification' => 'Menunggu',
+                                            'paid' => 'Dibayar',
+                                            'rejected' => 'Ditolak',
+                                        ];
+                                        $paymentLabel = $paymentLabels[$order->payment_status] ?? ucfirst($order->payment_status);
                                     @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $paymentColor }}">
-                                        {{ ucfirst(str_replace('_', ' ', $order->payment_status)) }}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ $paymentColor }}">
+                                        {{ $paymentLabel }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-4 py-3.5 text-center">
                                     @php
                                         $statusColors = [
                                             'pending' => 'bg-yellow-100 text-yellow-800',
@@ -97,14 +112,17 @@
                                         ];
                                         $statusColor = $statusColors[$order->order_status] ?? 'bg-gray-100 text-gray-800';
                                     @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColor }}">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ $statusColor }}">
                                         {{ ucfirst($order->order_status) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-4 py-3.5 text-center">
                                     <a href="{{ route('admin.orders.show', $order->id) }}"
-                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium">
-                                        Detail
+                                       class="p-1.5 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition inline-flex" title="Detail">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
                                     </a>
                                 </td>
                             </tr>
@@ -113,19 +131,9 @@
                 </table>
             </div>
 
-            {{-- Pagination --}}
-            <div class="px-4 py-3 border-t border-gray-200">
+            <div class="px-6 py-4 border-t border-gray-100">
                 {{ $orders->links() }}
             </div>
-        </div>
-    @else
-        <div class="bg-white rounded-lg shadow-md p-8 text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <p class="text-gray-500 text-lg">Belum ada pesanan</p>
-            <p class="text-gray-400 text-sm mt-1">Pesanan dari customer akan muncul di sini.</p>
-        </div>
-    @endif
+        @endif
+    </div>
 @endsection

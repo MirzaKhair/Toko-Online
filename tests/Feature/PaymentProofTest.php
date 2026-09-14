@@ -54,6 +54,13 @@ class PaymentProofTest extends TestCase
         return $product;
     }
 
+    protected function withTrackingAccess(Order $order): static
+    {
+        return $this->withSession([
+            "tracking_access.{$order->order_number}" => true,
+        ]);
+    }
+
     public function test_checkout_creates_order_with_unpaid_status(): void
     {
         $product = $this->createProductWithCart();
@@ -80,7 +87,7 @@ class PaymentProofTest extends TestCase
 
         $file = UploadedFile::fake()->image('bukti.png', 200, 200);
 
-        $response = $this->post("/pesanan/{$order->id}/bukti-bayar", [
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
             'proof' => $file,
         ]);
 
@@ -154,7 +161,7 @@ class PaymentProofTest extends TestCase
 
         $file = UploadedFile::fake()->image('bukti.png', 200, 200);
 
-        $response = $this->post("/pesanan/{$order->id}/bukti-bayar", [
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
             'proof' => $file,
         ]);
 
@@ -210,7 +217,7 @@ class PaymentProofTest extends TestCase
 
         $file = UploadedFile::fake()->image('bukti.png', 200, 200);
 
-        $response = $this->post("/pesanan/{$order->id}/bukti-bayar", [
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
             'proof' => $file,
         ]);
 
@@ -228,7 +235,7 @@ class PaymentProofTest extends TestCase
 
         $file = UploadedFile::fake()->image('bukti_baru.png', 200, 200);
 
-        $response = $this->post("/pesanan/{$order->id}/bukti-bayar", [
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
             'proof' => $file,
         ]);
 
@@ -284,5 +291,24 @@ class PaymentProofTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['proof']);
+    }
+
+    public function test_customer_cannot_upload_proof_for_an_order_that_has_not_been_tracked(): void
+    {
+        $order = Order::factory()->qris()->create([
+            'payment_status' => 'unpaid',
+        ]);
+
+        $file = UploadedFile::fake()->image('bukti.png', 200, 200);
+
+        $response = $this->post("/pesanan/{$order->id}/bukti-bayar", [
+            'proof' => $file,
+        ]);
+
+        $response->assertRedirect(route('tracking.form'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('payment_proofs', [
+            'order_id' => $order->id,
+        ]);
     }
 }

@@ -3,81 +3,81 @@
 @section('title', 'Kelola Kategori')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Kelola Kategori</h1>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Kelola Kategori</h1>
+            <p class="mt-1 text-sm text-gray-500">Total {{ $categories->count() }} kategori</p>
+        </div>
         <a href="{{ route('admin.categories.create') }}"
-           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            + Tambah Kategori
+           class="inline-flex items-center bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Tambah Kategori
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
         @if($categories->isEmpty())
-            <div class="p-8 text-center text-gray-500">
-                Belum ada kategori.
-            </div>
+            @component('components.empty-state', ['title' => 'Belum ada kategori', 'description' => 'Kategori akan muncul di sini setelah ditambahkan.', 'icon' => 'folder'])
+                <a href="{{ route('admin.categories.create') }}" class="mt-2 inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+                    Tambah Kategori
+                </a>
+            @endcomponent
         @else
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach($categories as $category)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $loop->iteration }}</td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ $category->name }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $category->slug }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $category->products_count }}</td>
-                            <td class="px-6 py-4">
-                                @if($category->is_active)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Aktif
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        Nonaktif
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm space-x-2">
-                                <a href="{{ route('admin.categories.edit', $category->id) }}"
-                                   class="text-blue-600 hover:text-blue-800">
-                                    Edit
-                                </a>
-                                <form action="{{ route('admin.categories.destroy', $category->id) }}"
-                                      method="POST"
-                                      class="inline"
-                                      onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-100">
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">No</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Slug</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Produk</th>
+                            <th class="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @foreach($categories as $category)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-3.5 text-sm text-gray-500">{{ $loop->iteration }}</td>
+                                <td class="px-6 py-3.5 text-sm font-semibold text-gray-900">{{ $category->name }}</td>
+                                <td class="px-6 py-3.5 text-sm text-gray-500 font-mono text-xs">{{ $category->slug }}</td>
+                                <td class="px-6 py-3.5 text-sm text-gray-700">{{ $category->products_count }} produk</td>
+                                <td class="px-6 py-3.5">
+                                    @if($category->is_active)
+                                        @component('components.badge', ['type' => 'success'])Aktif@endcomponent
+                                    @else
+                                        @component('components.badge', ['type' => 'default'])Nonaktif@endcomponent
+                                    @endif
+                                </td>
+                                <td class="px-6 py-3.5 text-right">
+                                    <div class="flex items-center justify-end space-x-1">
+                                        <a href="{{ route('admin.categories.edit', $category->id) }}"
+                                           class="p-1.5 text-gray-500 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="Edit">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </a>
+                                        <form action="{{ route('admin.categories.destroy', $category->id) }}"
+                                              method="POST"
+                                              class="inline"
+                                              onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-1.5 text-gray-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Hapus">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         @endif
     </div>
 @endsection

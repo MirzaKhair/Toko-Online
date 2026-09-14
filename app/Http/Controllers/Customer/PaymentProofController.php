@@ -12,6 +12,11 @@ class PaymentProofController extends Controller
 {
     public function store(UploadPaymentProofRequest $request, Order $order)
     {
+        if (!session("tracking_access.{$order->order_number}")) {
+            return redirect()->route('tracking.form')
+                ->with('error', 'Silakan lacak pesanan menggunakan nomor pesanan dan nomor telepon terlebih dahulu.');
+        }
+
         if ($order->payment_method !== 'qris') {
             return back()->with('error', 'Hanya pesanan dengan metode pembayaran QRIS yang dapat mengunggah bukti pembayaran.');
         }

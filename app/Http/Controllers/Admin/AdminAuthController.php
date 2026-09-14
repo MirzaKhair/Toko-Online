@@ -70,6 +70,29 @@ class AdminAuthController extends Controller
 
     public function dashboard()
     {
-        return view('admin.dashboard');
+        $totalProducts = \App\Models\Product::count();
+        $totalOrders = \App\Models\Order::count();
+        $totalRevenue = \App\Models\Order::where('payment_status', 'paid')->sum('total_amount');
+        $pendingOrders = \App\Models\Order::where('order_status', 'pending')->count();
+        $waitingPayment = \App\Models\Order::where('payment_status', 'waiting_verification')->count();
+        $totalCategories = \App\Models\Category::count();
+
+        $recentOrders = \App\Models\Order::latest()->take(5)->get();
+
+        $monthlyRevenue = \App\Models\Order::where('payment_status', 'paid')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_amount');
+
+        return view('admin.dashboard', compact(
+            'totalProducts',
+            'totalOrders',
+            'totalRevenue',
+            'pendingOrders',
+            'waitingPayment',
+            'totalCategories',
+            'recentOrders',
+            'monthlyRevenue'
+        ));
     }
 }
