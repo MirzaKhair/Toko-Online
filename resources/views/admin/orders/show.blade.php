@@ -267,83 +267,168 @@
                 </div>
             @endif
 
-            {{-- Ubah Ongkir --}}
-            @php
-                $finalStatuses = ['completed', 'cancelled'];
-                $canEditShipping = !in_array($order->order_status, $finalStatuses);
-            @endphp
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Ubah Ongkos Kirim</h2>
-                @if($canEditShipping)
-                    <form action="{{ route('admin.orders.updateShippingCost', $order->id) }}" method="POST">
+            {{-- Konfirmasi Pesanan (untuk status pending) --}}
+            @if($order->order_status === 'pending' && $order->shipping_finalized_at === null)
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Konfirmasi Pesanan</h2>
+                    <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800">Pesanan ini belum dikonfirmasi. Tentukan ongkos kirim untuk mengonfirmasi pesanan.</p>
+                    </div>
+                    <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="text-sm text-gray-600">Subtotal: <span class="font-semibold text-gray-900">Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span></p>
+                    </div>
+                    <form action="{{ route('admin.orders.confirm', $order->id) }}" method="POST">
                         @csrf
                         @method('PATCH')
                         <div class="mb-3">
                             <label for="shipping_cost" class="block text-sm font-medium text-gray-700 mb-1">Ongkos Kirim (Rp)</label>
                             <input type="number" name="shipping_cost" id="shipping_cost"
                                    value="{{ $order->shipping_cost }}"
-                                   min="0" step="100"
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                   min="0" step="1000"
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   oninput="updatePreviewTotal()">
                             @error('shipping_cost')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-                            Simpan Ongkir
+                        <div class="mb-3">
+                            <label for="note" class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                            <textarea name="note" id="note" rows="2"
+                                      class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Catatan untuk pesanan...">{{ old('note') }}</textarea>
+                            @error('note')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p class="text-sm text-green-800">Total yang akan terbentuk: <span id="preview-total" class="font-bold">Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span></p>
+                        </div>
+                        <button type="submit" onclick="return confirm('Yakin ingin mengonfirmasi pesanan ini?')"
+                                class="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 transition">
+                            Konfirmasi Pesanan
                         </button>
                     </form>
-                @else
-                    <p class="text-sm text-gray-500">Ongkos kirim tidak dapat diubah untuk pesanan {{ strtolower($order->order_status) }}.</p>
-                @endif
-            </div>
+                </div>
 
-            {{-- Ubah Status --}}
-            @if($canEditShipping)
+                <script>
+                    function updatePreviewTotal() {
+                        const shippingCost = parseInt(document.getElementById('shipping_cost').value) || 0;
+                        const subtotal = {{ $order->subtotal }};
+                        const total = subtotal + shippingCost;
+                        document.getElementById('preview-total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+                    }
+                </script>
+
+            {{-- Info Ongkir (sudah final) --}}
+            @elseif($order->shipping_finalized_at !== null)
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Ubah Status Pesanan</h2>
-                    @php
-                        $validTransitions = [
-                            'pending'    => ['confirmed', 'cancelled'],
-                            'confirmed'  => ['processing', 'cancelled'],
-                            'processing' => ['shipped', 'cancelled'],
-                            'shipped'    => ['completed'],
-                        ];
-                        $nextStatuses = $validTransitions[$order->order_status] ?? [];
-                    @endphp
-                    @if(count($nextStatuses) > 0)
-                        <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Ongkos Kirim</h2>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="text-gray-900">Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Ongkos Kirim</span>
+                            <span class="text-gray-900">Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-gray-900">Total</span>
+                                <span class="font-bold text-blue-600">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Dikonfirmasi pada</span>
+                            <span class="text-gray-900">{{ $order->shipping_finalized_at->format('d M Y, H:i') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            {{-- Form Edit Ongkir (sebelum final, bukan pending) --}}
+            @else
+                @php
+                    $finalStatuses = ['completed', 'cancelled'];
+                    $canEditShipping = !in_array($order->order_status, $finalStatuses);
+                @endphp
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Ubah Ongkos Kirim</h2>
+                    @if($canEditShipping)
+                        <form action="{{ route('admin.orders.updateShippingCost', $order->id) }}" method="POST">
                             @csrf
                             @method('PATCH')
                             <div class="mb-3">
-                                <label for="order_status" class="block text-sm font-medium text-gray-700 mb-1">Status Baru</label>
-                                <select name="order_status" id="order_status"
-                                        class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    @foreach($nextStatuses as $status)
-                                        <option value="{{ $status }}">{{ ucfirst($status) }}</option>
-                                    @endforeach
-                                </select>
-                                @error('order_status')
+                                <label for="shipping_cost" class="block text-sm font-medium text-gray-700 mb-1">Ongkos Kirim (Rp)</label>
+                                <input type="number" name="shipping_cost" id="shipping_cost"
+                                       value="{{ $order->shipping_cost }}"
+                                       min="0" step="100"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                @error('shipping_cost')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
-                            <div class="mb-3">
-                                <label for="note" class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
-                                <textarea name="note" id="note" rows="2"
-                                          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                          placeholder="Alasan perubahan status...">{{ old('note') }}</textarea>
-                                @error('note')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <button type="submit" onclick="return confirm('Yakin ingin mengubah status pesanan?')"
-                                    class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
-                                Update Status
+                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+                                Simpan Ongkir
                             </button>
                         </form>
                     @else
-                        <p class="text-sm text-gray-500">Pesanan sudah mencapai status final dan tidak dapat diubah.</p>
+                        <p class="text-sm text-gray-500">Ongkos kirim tidak dapat diubah untuk pesanan {{ strtolower($order->order_status) }}.</p>
                     @endif
                 </div>
+            @endif
+
+            {{-- Ubah Status --}}
+            @if($order->order_status !== 'pending')
+                @php
+                    $finalStatuses = ['completed', 'cancelled'];
+                    $canEditStatus = !in_array($order->order_status, $finalStatuses);
+                @endphp
+                @if($canEditStatus)
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Ubah Status Pesanan</h2>
+                        @php
+                            $validTransitions = [
+                                'confirmed'  => ['processing', 'cancelled'],
+                                'processing' => ['shipped', 'cancelled'],
+                                'shipped'    => ['completed'],
+                            ];
+                            $nextStatuses = $validTransitions[$order->order_status] ?? [];
+                        @endphp
+                        @if(count($nextStatuses) > 0)
+                            <form action="{{ route('admin.orders.updateStatus', $order->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <div class="mb-3">
+                                    <label for="order_status" class="block text-sm font-medium text-gray-700 mb-1">Status Baru</label>
+                                    <select name="order_status" id="order_status"
+                                            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        @foreach($nextStatuses as $status)
+                                            <option value="{{ $status }}">{{ ucfirst($status) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('order_status')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label for="note" class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                                    <textarea name="note" id="note" rows="2"
+                                              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                              placeholder="Alasan perubahan status...">{{ old('note') }}</textarea>
+                                    @error('note')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <button type="submit" onclick="return confirm('Yakin ingin mengubah status pesanan?')"
+                                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+                                    Update Status
+                                </button>
+                            </form>
+                        @else
+                            <p class="text-sm text-gray-500">Pesanan sudah mencapai status final dan tidak dapat diubah.</p>
+                        @endif
+                    </div>
+                @endif
             @endif
         </div>
     </div>

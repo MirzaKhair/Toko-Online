@@ -100,31 +100,16 @@
 
                         {{-- QRIS Section --}}
                         <div id="qris-section" class="hidden mt-4">
-                            <div class="p-5 bg-gray-50 border border-gray-200 rounded-xl">
-                                @if($storeSetting && $storeSetting->qris_image)
-                                    <div class="text-center">
-                                        <img src="{{ asset('storage/' . $storeSetting->qris_image) }}"
-                                             alt="QRIS Toko"
-                                             class="mx-auto max-w-[250px] max-h-[250px] object-contain rounded-lg">
-                                        <p class="mt-4 text-xl font-bold text-blue-600">
-                                            Total: Rp {{ number_format($totalAmount, 0, ',', '.') }}
-                                        </p>
-                                        <p class="mt-2 text-sm text-gray-600">
-                                            Silakan scan QRIS dan bayar sesuai total pesanan.
-                                        </p>
-                                        <p class="mt-1 text-xs text-yellow-600 font-medium">
-                                            Pastikan nominal pembayaran sesuai dengan total pesanan.
-                                        </p>
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                <div class="flex items-start space-x-3">
+                                    <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <div>
+                                        <p class="text-sm font-semibold text-blue-800">Informasi Pembayaran QRIS</p>
+                                        <p class="text-sm text-blue-700 mt-1">Setelah pesanan dibuat, admin akan menentukan ongkir dan mengonfirmasi total pembayaran. QRIS akan tersedia di halaman Lacak Pesanan setelah pesanan dikonfirmasi.</p>
                                     </div>
-                                @else
-                                    <div class="text-center">
-                                        <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                                        </svg>
-                                        <p class="text-sm text-yellow-600 font-medium">QRIS toko belum tersedia</p>
-                                        <p class="text-xs text-gray-500 mt-1">Silakan pilih metode pembayaran lain atau hubungi admin.</p>
-                                    </div>
-                                @endif
+                                </div>
                             </div>
                         </div>
                     </div>

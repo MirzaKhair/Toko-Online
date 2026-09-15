@@ -80,6 +80,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Order Management
         Route::get('/pesanan', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/pesanan/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/pesanan/{order}/konfirmasi', [OrderController::class, 'confirmOrder'])->name('orders.confirm');
         Route::patch('/pesanan/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::patch('/pesanan/{order}/ongkir', [OrderController::class, 'updateShippingCost'])->name('orders.updateShippingCost');
 

@@ -25,6 +25,7 @@ class OrderFactory extends Factory
             'payment_status' => 'unpaid',
             'order_status' => 'pending',
             'admin_note' => null,
+            'shipping_finalized_at' => null,
         ];
     }
 
@@ -32,6 +33,13 @@ class OrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'payment_method' => 'qris',
+        ]);
+    }
+
+    public function cash(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'payment_method' => 'cash',
         ]);
     }
 
@@ -46,6 +54,22 @@ class OrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'payment_status' => 'waiting_verification',
+        ]);
+    }
+
+    public function confirmed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'order_status' => 'confirmed',
+            'shipping_finalized_at' => now(),
+        ]);
+    }
+
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'order_status' => 'pending',
+            'shipping_finalized_at' => null,
         ]);
     }
 }

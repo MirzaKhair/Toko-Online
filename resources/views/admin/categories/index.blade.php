@@ -45,11 +45,11 @@
                                 <td class="px-6 py-3.5 text-sm text-gray-500 font-mono text-xs">{{ $category->slug }}</td>
                                 <td class="px-6 py-3.5 text-sm text-gray-700">{{ $category->products_count }} produk</td>
                                 <td class="px-6 py-3.5">
-                                    @if($category->is_active)
-                                        @component('components.badge', ['type' => 'success'])Aktif@endcomponent
-                                    @else
-                                        @component('components.badge', ['type' => 'default'])Nonaktif@endcomponent
-                                    @endif
+                                @if($category->is_active)
+                                    <x-badge type="success">Aktif</x-badge>
+                                @else
+                                    <x-badge type="default">Nonaktif</x-badge>
+                                @endif
                                 </td>
                                 <td class="px-6 py-3.5 text-right">
                                     <div class="flex items-center justify-end space-x-1">

@@ -94,12 +94,20 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Ongkos Kirim</span>
-                    <span class="text-gray-900">{{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Gratis' }}</span>
+                    @if($order->shipping_finalized_at !== null)
+                        <span class="text-gray-900">{{ $order->shipping_cost > 0 ? 'Rp ' . number_format($order->shipping_cost, 0, ',', '.') : 'Gratis' }}</span>
+                    @else
+                        <span class="text-gray-400 italic">Menunggu konfirmasi admin</span>
+                    @endif
                 </div>
                 <div class="border-t border-gray-100 pt-2">
                     <div class="flex justify-between">
                         <span class="text-sm font-semibold text-gray-900">Total</span>
-                        <span class="text-lg font-bold text-blue-600">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                        @if($order->shipping_finalized_at !== null)
+                            <span class="text-lg font-bold text-blue-600">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                        @else
+                            <span class="text-lg font-bold text-gray-400 italic">Menunggu konfirmasi</span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -148,7 +156,17 @@
             <div class="bg-white rounded-xl border border-gray-100 p-6 mb-6">
                 <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Bukti Pembayaran</h2>
 
-                @if($order->payment_status === 'paid')
+                @if($order->order_status === 'pending' || $order->shipping_finalized_at === null)
+                    <div class="flex items-center space-x-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <svg class="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-blue-800">Menunggu konfirmasi pesanan</p>
+                            <p class="text-sm text-blue-600 mt-0.5">Admin akan menentukan ongkos kirim dan mengonfirmasi pesanan Anda. QRIS dan total pembayaran akan tersedia setelah pesanan dikonfirmasi.</p>
+                        </div>
+                    </div>
+                @elseif($order->payment_status === 'paid')
                     <div class="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-xl">
                         <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -207,11 +225,38 @@
                         @enderror
                     </form>
                 @else
+                    {{-- QR Code --}}
+                    @if($storeSetting && $storeSetting->qris_image)
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                <img src="{{ asset('storage/' . $storeSetting->qris_image) }}"
+                                     alt="QRIS Code"
+                                     class="w-56 h-56 object-contain">
+                            </div>
+                        </div>
+                    @else
+                        <div class="flex items-center space-x-3 p-4 bg-gray-50 border border-gray-200 rounded-xl mb-4">
+                            <svg class="w-6 h-6 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            <p class="text-sm text-gray-500">Gambar QRIS belum diatur oleh admin. Silakan hubungi admin untuk informasi pembayaran.</p>
+                        </div>
+                    @endif
+
+                    {{-- Total yang harus dibayar --}}
+                    <div class="text-center mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <p class="text-sm text-blue-600 mb-1">Total yang harus dibayar</p>
+                        <p class="text-2xl font-bold text-blue-700">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
+                    </div>
+
+                    {{-- Riwayat bukti sebelumnya --}}
                     @if($latestProof)
                         <div class="mb-3">
                             <p class="text-sm text-gray-600">Bukti terakhir: <span class="font-medium">{{ ucfirst($latestProof->status) }}</span></p>
                         </div>
                     @endif
+
+                    {{-- Form upload --}}
                     <p class="text-sm text-gray-600 mb-3">Unggah bukti pembayaran QRIS Anda:</p>
                     <form action="{{ route('payment-proof.store', $order->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf

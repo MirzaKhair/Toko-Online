@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 
 class OrderTrackingController extends Controller
@@ -52,7 +53,9 @@ class OrderTrackingController extends Controller
 
         $maskedPhone = $this->maskPhone($order->customer_phone);
 
-        return view('customer.orders.detail', compact('order', 'maskedPhone'));
+        $storeSetting = StoreSetting::getSingleton();
+
+        return view('customer.orders.detail', compact('order', 'maskedPhone', 'storeSetting'));
     }
 
     private function maskPhone(string $phone): string

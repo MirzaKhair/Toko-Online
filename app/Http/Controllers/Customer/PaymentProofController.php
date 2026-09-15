@@ -21,8 +21,20 @@ class PaymentProofController extends Controller
             return back()->with('error', 'Hanya pesanan dengan metode pembayaran QRIS yang dapat mengunggah bukti pembayaran.');
         }
 
+        if ($order->order_status === 'pending' || $order->shipping_finalized_at === null) {
+            return back()->with('error', 'Pesanan belum dikonfirmasi admin. Silakan tunggu konfirmasi sebelum mengunggah bukti pembayaran.');
+        }
+
+        if ($order->order_status === 'cancelled') {
+            return back()->with('error', 'Pesanan ini sudah dibatalkan. Tidak dapat mengunggah bukti pembayaran.');
+        }
+
         if ($order->payment_status === 'paid') {
             return back()->with('error', 'Pembayaran pesanan ini sudah dikonfirmasi. Tidak dapat mengunggah bukti lagi.');
+        }
+
+        if ($order->payment_status === 'waiting_verification') {
+            return back()->with('error', 'Bukti pembayaran sedang dalam proses verifikasi. Silakan tunggu hasilnya.');
         }
 
         $file = $request->file('proof');

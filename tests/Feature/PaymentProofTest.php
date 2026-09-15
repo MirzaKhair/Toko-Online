@@ -77,12 +77,14 @@ class PaymentProofTest extends TestCase
         $this->assertNotNull($order);
         $this->assertEquals('unpaid', $order->payment_status);
         $this->assertEquals('pending', $order->order_status);
+        $this->assertNull($order->shipping_finalized_at);
     }
 
-    public function test_qris_customer_can_upload_proof(): void
+    public function test_qris_customer_can_upload_proof_after_confirmation(): void
     {
-        $order = Order::factory()->qris()->create([
-            'payment_status' => 'unpaid',
+        $order = Order::factory()->qris()->confirmed()->create([
+            'shipping_cost' => 10000,
+            'total_amount' => 110000,
         ]);
 
         $file = UploadedFile::fake()->image('bukti.png', 200, 200);
@@ -100,6 +102,45 @@ class PaymentProofTest extends TestCase
         $proof = PaymentProof::where('order_id', $order->id)->first();
         $this->assertNotNull($proof);
         $this->assertEquals('pending', $proof->status);
+    }
+
+    public function test_qris_customer_cannot_upload_proof_before_confirmation(): void
+    {
+        $order = Order::factory()->qris()->pending()->create([
+            'payment_status' => 'unpaid',
+        ]);
+
+        $file = UploadedFile::fake()->image('bukti.png', 200, 200);
+
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
+            'proof' => $file,
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $order->refresh();
+        $this->assertEquals('unpaid', $order->payment_status);
+
+        $this->assertDatabaseMissing('payment_proofs', [
+            'order_id' => $order->id,
+        ]);
+    }
+
+    public function test_qris_customer_cannot_upload_proof_while_waiting_verification(): void
+    {
+        $order = Order::factory()->qris()->confirmed()->create([
+            'payment_status' => 'waiting_verification',
+        ]);
+
+        $file = UploadedFile::fake()->image('bukti.png', 200, 200);
+
+        $response = $this->withTrackingAccess($order)->post("/pesanan/{$order->id}/bukti-bayar", [
+            'proof' => $file,
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $this->assertEquals(0, PaymentProof::where('order_id', $order->id)->count());
     }
 
     public function test_admin_can_approve_payment_proof(): void
@@ -154,8 +195,7 @@ class PaymentProofTest extends TestCase
 
     public function test_cash_customer_cannot_upload_proof(): void
     {
-        $order = Order::factory()->create([
-            'payment_method' => 'cash',
+        $order = Order::factory()->cash()->confirmed()->create([
             'payment_status' => 'unpaid',
         ]);
 
@@ -228,7 +268,7 @@ class PaymentProofTest extends TestCase
 
     public function test_customer_can_upload_new_proof_after_rejection(): void
     {
-        $order = Order::factory()->qris()->create([
+        $order = Order::factory()->qris()->confirmed()->create([
             'payment_status' => 'rejected',
         ]);
         PaymentProof::factory()->rejected()->create(['order_id' => $order->id]);
@@ -265,7 +305,7 @@ class PaymentProofTest extends TestCase
 
     public function test_upload_validates_file_type(): void
     {
-        $order = Order::factory()->qris()->create([
+        $order = Order::factory()->qris()->confirmed()->create([
             'payment_status' => 'unpaid',
         ]);
 
@@ -280,7 +320,7 @@ class PaymentProofTest extends TestCase
 
     public function test_upload_validates_file_size(): void
     {
-        $order = Order::factory()->qris()->create([
+        $order = Order::factory()->qris()->confirmed()->create([
             'payment_status' => 'unpaid',
         ]);
 
@@ -295,7 +335,7 @@ class PaymentProofTest extends TestCase
 
     public function test_customer_cannot_upload_proof_for_an_order_that_has_not_been_tracked(): void
     {
-        $order = Order::factory()->qris()->create([
+        $order = Order::factory()->qris()->confirmed()->create([
             'payment_status' => 'unpaid',
         ]);
 
@@ -310,5 +350,127 @@ class PaymentProofTest extends TestCase
         $this->assertDatabaseMissing('payment_proofs', [
             'order_id' => $order->id,
         ]);
+    }
+
+    public function test_admin_can_confirm_order_with_shipping_cost(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->pending()->create([
+            'subtotal' => 100000,
+            'shipping_cost' => 0,
+            'total_amount' => 100000,
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/konfirmasi", [
+            'shipping_cost' => 15000,
+            'note' => 'Ongkir standar',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertEquals('confirmed', $order->order_status);
+        $this->assertEquals(15000, $order->shipping_cost);
+        $this->assertEquals(115000, $order->total_amount);
+        $this->assertNotNull($order->shipping_finalized_at);
+    }
+
+    public function test_admin_cannot_confirm_already_confirmed_order(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->confirmed()->create([
+            'shipping_cost' => 10000,
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/konfirmasi", [
+            'shipping_cost' => 20000,
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $order->refresh();
+        $this->assertEquals(10000, $order->shipping_cost);
+    }
+
+    public function test_admin_cannot_confirm_non_pending_order(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->create([
+            'order_status' => 'processing',
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/konfirmasi", [
+            'shipping_cost' => 15000,
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $order->refresh();
+        $this->assertEquals(0, $order->shipping_cost);
+    }
+
+    public function test_admin_cannot_change_shipping_cost_after_finalization(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->confirmed()->create([
+            'shipping_cost' => 15000,
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/ongkir", [
+            'shipping_cost' => 25000,
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $order->refresh();
+        $this->assertEquals(15000, $order->shipping_cost);
+    }
+
+    public function test_admin_cannot_confirm_order_with_negative_shipping_cost(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->pending()->create();
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/konfirmasi", [
+            'shipping_cost' => -5000,
+        ]);
+
+        $response->assertSessionHasErrors(['shipping_cost']);
+
+        $order->refresh();
+        $this->assertEquals('pending', $order->order_status);
+    }
+
+    public function test_admin_can_update_status_for_confirmed_order(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->confirmed()->create();
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/status", [
+            'order_status' => 'processing',
+            'note' => 'Mulai diproses',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $order->refresh();
+        $this->assertEquals('processing', $order->order_status);
+    }
+
+    public function test_admin_cannot_use_status_route_to_confirm_pending_order(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $order = Order::factory()->qris()->pending()->create();
+
+        $response = $this->actingAs($admin)->patch("/admin/pesanan/{$order->id}/status", [
+            'order_status' => 'confirmed',
+        ]);
+
+        $response->assertSessionHas('error');
+
+        $order->refresh();
+        $this->assertEquals('pending', $order->order_status);
     }
 }

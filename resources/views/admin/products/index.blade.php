@@ -19,31 +19,31 @@
 
     <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
         @if($products->isEmpty())
-            @component('components.empty-state', ['title' => 'Belum ada produk', 'description' => 'Produk akan muncul di sini setelah ditambahkan.', 'icon' => 'box'])
+            <x-empty-state title="Belum ada produk" description="Produk akan muncul di sini setelah ditambahkan." icon="box">
                 <a href="{{ route('admin.products.create') }}" class="mt-2 inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
                     Tambah Produk
                 </a>
-            @endcomponent
+            </x-empty-state>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-100">
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">No</th>
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Gambar</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">No</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Gambar</th>
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Harga</th>
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Stok</th>
-                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Kategori</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Harga</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Stok</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @foreach($products as $product)
                             <tr class="hover:bg-gray-50 transition">
-                                <td class="px-4 py-3.5 text-sm text-gray-500">{{ $products->firstItem() + $loop->index }}</td>
-                                <td class="px-4 py-3.5">
+                                <td class="px-4 py-3.5 text-sm text-gray-500 whitespace-nowrap">{{ $products->firstItem() + $loop->index }}</td>
+                                <td class="px-4 py-3.5 whitespace-nowrap">
                                     @if($product->image)
                                         <img src="{{ asset('storage/' . $product->image) }}"
                                              alt="{{ $product->name }}"
@@ -62,22 +62,22 @@
                                         <p class="text-[11px] text-gray-400 mt-0.5">Memiliki varian</p>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3.5 text-sm text-gray-600">{{ $product->category->name ?? '-' }}</td>
-                                <td class="px-4 py-3.5 text-sm font-medium text-gray-900">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3.5 text-sm text-gray-700">{{ $product->stock }}</td>
-                                <td class="px-4 py-3.5">
+                                <td class="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap">{{ $product->category->name ?? '-' }}</td>
+                                <td class="px-4 py-3.5 text-sm font-medium text-gray-900 whitespace-nowrap">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3.5 text-sm text-gray-700 whitespace-nowrap">{{ $product->stock }}</td>
+                                <td class="px-4 py-3.5 whitespace-nowrap">
                                     <div class="flex flex-wrap gap-1">
                                         @if($product->is_active)
-                                            @component('components.badge', ['type' => 'success', 'size' => 'xs'])Aktif@endcomponent
+                                            <x-badge type="success" size="xs">Aktif</x-badge>
                                         @else
-                                            @component('components.badge', ['type' => 'default', 'size' => 'xs'])Nonaktif@endcomponent
+                                            <x-badge type="default" size="xs">Nonaktif</x-badge>
                                         @endif
                                         @if($product->is_featured)
-                                            @component('components.badge', ['type' => 'warning', 'size' => 'xs'])Unggulan@endcomponent
+                                            <x-badge type="warning" size="xs">Unggulan</x-badge>
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-4 py-3.5 text-right">
+                                <td class="px-4 py-3.5 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end space-x-1">
                                         <a href="{{ route('admin.variants.index', $product->id) }}"
                                            class="p-1.5 text-gray-500 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition" title="Varian">

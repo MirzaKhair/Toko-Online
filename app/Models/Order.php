@@ -19,6 +19,7 @@ class Order extends Model
         'customer_note',
         'subtotal',
         'shipping_cost',
+        'shipping_finalized_at',
         'total_amount',
         'payment_method',
         'payment_status',
@@ -30,6 +31,7 @@ class Order extends Model
         'subtotal' => 'decimal:2',
         'shipping_cost' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'shipping_finalized_at' => 'datetime',
     ];
 
     public function items(): HasMany
